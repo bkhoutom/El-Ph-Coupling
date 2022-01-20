@@ -1,0 +1,5 @@
+calcType = elec-hole
+stateType = diabatic
+gridSize = 80 64 64
+maxElecStates = 80
+maxHoleStates = 40

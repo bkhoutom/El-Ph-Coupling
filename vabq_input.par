@@ -1,0 +1,4 @@
+--nAtom=7156 # number of semiconductor atoms in the conf.par
+--nElec=10
+--nHole=0
+--temp=298
