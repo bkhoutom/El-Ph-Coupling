@@ -22,7 +22,7 @@
 #include <stdlib.h>
 #include <omp.h>
 #include "unistd.h"
-#include "/opt/intel/compilers_and_libraries/linux/mkl/include/mkl.h"
+#include "mkl.h"
 
 // Personal headers
 #include "vector.h"
@@ -87,7 +87,6 @@ typedef struct dParams_ {
 typedef struct lParams_ {
   char calcType[20];
   char stateType[20];
-  char crystalStructure[20];
   long calcSinglets, calcTriplets;
   long debug;
   long nAtoms, nAtomTypes;
@@ -178,23 +177,20 @@ typedef struct intTwoQPState_ {
 
 /****************************************************************************/
 // functions in nonadiabatic.c
-// void calcDerivativeCouplings(vector *Vab, vector *Vij, vector *dPotdR, atom *atoms,
-//         grid1d dAtomicPPGrid, nonintQP *holeQP, nonintQP *elecQP, grid3d rSpaceGrid, 
-//         lParams lPar);
-void calcElPh(vector *Vab, vector *Vij, vector *dPotdR, atom *atoms, atom *atomNeighbors,
-        grid1d atomicPPGrid, grid1d dAtomicPPGrid, nonintQP *holeQP, nonintQP *elecQP, 
-        grid3d rSpaceGrid, double *strainScale, vector *strainScaleDeriv, lParams lPar);
+void calcDerivativeCouplings(vector *Vab, vector *Vij, vector *dPotdR, atom *atoms,
+        grid1d dAtomicPPGrid, nonintQP *holeQP, nonintQP *elecQP, grid3d rSpaceGrid, 
+        lParams lPar);
+void calcElPh(vector *Vab, vector *Vij, vector *dPotdR, atom *atoms,
+        grid1d dAtomicPPGrid, nonintQP *holeQP, nonintQP *elecQP, grid3d rSpaceGrid, 
+        lParams lPar);
 
 /****************************************************************************/
 // functions in pseudopotential.c
 void calcPseudopotentialDerivative(grid1d *dAtomicPPGrid, gridPoint1d *dAtomicPPGP,
         grid1d atomicPPGrid, long nAtomTypes);
-void calcPotential(vector *pot, grid3d rSpaceGrid, vector atomPosition,
-        double *potentialValues, double *potentialGridPointValues,
-        double potGridStepSize, long nPotValues, vector strainScaleDeriv);
 void calcdPotentialdR(vector *dPotdR, grid3d rSpaceGrid, vector atomPosition, 
         double *potentialValues, double *potentialGridPointValues, 
-        double potGridStepSize, long nPotValues, double strainScale);
+        double potGridStepSize, long nPotValues);
 double interpolate(double evaluationPoint, double stepSize, double *potentialValues, 
         double *potentialGrid, long nPotValues);
 
@@ -217,14 +213,7 @@ void assign_atom_type(char *atype,long j);
 long fillAtomStructureFromConfFile(atom *atoms, lParams *lPar);
 long isAPassivationSymbol(char *atomSymbol);
 long isNewAtomType(atom *atoms, long currIndex);
-void readAtomicPseudopotentials(grid1d *atomicPPGrid, gridPoint1d *atomicPPGP, atom *atoms, lParams lPar, double *a4Params);
-void readNearestNeighbors(long nAtoms, atom *atomNeighbors);
-void calculateRefTetrahedronVol(long nAtoms, int crystalStructure, atom *atoms, atom *atomNeighbors, double *refTetrahedronVol);
-void calculateTetrahedronVol(long nAtoms, atom *atoms, atom *atomNeighbors, double *tetrahedronVol);
-void calculateTetrahedronVolDeriv(long nAtoms, atom *atoms, atom *atomNeighbors, double *tetrahedronVol, vector *tetrahedronVolDerivatives);
-void calculateStrainScale(long nAtoms, atom *atoms, double *tetrahedronVolRef, double *tetrahedronVol, double *a4Params, double *strainScale);
-void calculateStrainScaleDeriv(long nAtoms, atom *atoms, atom *atomNeighbors, double *tetrahedronVolRef, vector *tetrahedronVolDeriv,
-        double *a4Params, vector *strainScaleDeriv);
+void readAtomicPseudopotentials(grid1d *atomicPPGrid, gridPoint1d *atomicPPGP, atom *atoms, lParams lPar);
 
 /****************************************************************************/
 // Functions in errorHandling.c

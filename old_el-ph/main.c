@@ -25,7 +25,7 @@
 
 /*****************************************************************************/
 int main(long argc, char *argv[]) {
-  double *psiHoles, *psiElecs, *a4Params;
+  double *psiHoles, *psiElecs;
   nonintQP *holeQP, *elecQP;
   nonintTwoQPState *nonintTwoQP;
   intTwoQPState *intTwoQP;
@@ -35,12 +35,9 @@ int main(long argc, char *argv[]) {
   grid3d rSpaceGrid;
   grid1d atomicPPGrid, dAtomicPPGrid;
   gridPoint1d *atomicPPGP, *dAtomicPPGP; 
-  atom *atoms, *atomNearestNeighbors;
+  atom *atoms;
   dParams dPar;  
   lParams lPar;
-  double *refTetrahedronVol, *tetrahedronVol, *strainScale;
-  vector *tetrahedronVolDerivatives, *strainScaleDerivatives;
-  int crystalStructureInt;
 
   /*************************************************************************/  
   // Write time the program began and read input.par 
@@ -89,47 +86,12 @@ int main(long argc, char *argv[]) {
   atomicPPGrid.nGridPoints = dAtomicPPGrid.nGridPoints = 1024; // TODO: have more flexibility here
   if ((atomicPPGP = (gridPoint1d *) calloc(atomicPPGrid.nGridPoints*lPar.nSCAtomTypes, sizeof(gridPoint1d))) == NULL) memoryError("atomicPPGP");
   if ((dAtomicPPGP = (gridPoint1d *) calloc(dAtomicPPGrid.nGridPoints*lPar.nSCAtomTypes, sizeof(gridPoint1d))) == NULL) memoryError("dAtomicPPGP");
-  if ((a4Params = (double *) calloc(lPar.nSCAtomTypes, sizeof(double))) == NULL) memoryError("a4Params");
 
   // Read in the pseudopotentials for all atom types
-  readAtomicPseudopotentials(&atomicPPGrid, atomicPPGP, atoms, lPar, a4Params);
+  readAtomicPseudopotentials(&atomicPPGrid, atomicPPGP, atoms, lPar);
 
   // Calculate the derivative of the pseudopotentials for all atom types
   calcPseudopotentialDerivative(&dAtomicPPGrid, dAtomicPPGP, atomicPPGrid, lPar.nSCAtomTypes);
-
-  /**************************************************************************/
-  /* Strain-dependent related computation */
-  if ((atomNearestNeighbors = (atom *) calloc(4*lPar.nAtoms, sizeof(atom))) == NULL) memoryError("atomNearestNeighbors");
-  if ((refTetrahedronVol = (double *) calloc(lPar.nAtoms, sizeof(double))) == NULL) memoryError("refTetrahedronVol");
-  if ((tetrahedronVol = (double *) calloc(lPar.nAtoms, sizeof(double))) == NULL) memoryError("tetrahedronVol");
-  if ((tetrahedronVolDerivatives = (vector *) calloc(4*lPar.nAtoms, sizeof(vector))) == NULL) memoryError("tetrahedronVolDerivatives");
-  if ((strainScale = (double *) calloc(lPar.nAtoms, sizeof(double))) == NULL) memoryError("strainScale");
-  if ((strainScaleDerivatives = (vector *) calloc(4*lPar.nAtoms, sizeof(vector))) == NULL) memoryError("strainScaleDerivatives");
-
-  if (! strcmp(lPar.crystalStructure, "wurtzite")) {
-      crystalStructureInt = 0;
-  }
-  else if (! strcmp(lPar.crystalStructure, "zincblende")) {
-      crystalStructureInt = 1;
-  }
-  else {
-      printf("\n\nCrystal structure type %s not recognized -- the program is exiting!!!\n\n", lPar.crystalStructure);
-      fflush(stdout);
-      exit(EXIT_FAILURE);
-  }
-
-  readNearestNeighbors(lPar.nAtoms, atomNearestNeighbors);
-  calculateRefTetrahedronVol(lPar.nAtoms, crystalStructureInt, atoms, atomNearestNeighbors, refTetrahedronVol);
-  calculateTetrahedronVol(lPar.nAtoms, atoms, atomNearestNeighbors, tetrahedronVol);
-  calculateTetrahedronVolDeriv(lPar.nAtoms, atoms, atomNearestNeighbors, tetrahedronVol, tetrahedronVolDerivatives);
-  calculateStrainScale(lPar.nAtoms, atoms, refTetrahedronVol, tetrahedronVol, a4Params, strainScale);
-  calculateStrainScaleDeriv(lPar.nAtoms, atoms, atomNearestNeighbors, refTetrahedronVol, tetrahedronVolDerivatives,
-          a4Params, strainScaleDerivatives);
-
-  printf("Finished with strain-related calculations\n");
-  fflush(stdout);
-  
-  free(refTetrahedronVol); free(tetrahedronVol); free(tetrahedronVolDerivatives); free(a4Params);
 
   /**************************************************************************/
   // Initialize the noninteracting two quasiparticle states
@@ -140,8 +102,12 @@ int main(long argc, char *argv[]) {
   initRSpaceGrid(&rSpaceGrid, rSpaceGP, lPar);
 
   /**************************************************************************/ 
-  calcElPh(Vab, Vij, dPotdAtomPos, atoms, atomNearestNeighbors, atomicPPGrid, dAtomicPPGrid, 
-          holeQP, elecQP, rSpaceGrid, strainScale, strainScaleDerivatives, lPar);
+  if (! strcmp(lPar.stateType, "adiabatic")) {
+    calcDerivativeCouplings(Vab, Vij, dPotdAtomPos, atoms, dAtomicPPGrid, holeQP, elecQP, rSpaceGrid, lPar);
+  }
+  else if (! strcmp(lPar.stateType, "diabatic")) {
+    calcElPh(Vab, Vij, dPotdAtomPos, atoms, dAtomicPPGrid, holeQP, elecQP, rSpaceGrid, lPar);
+  }
 
   /**************************************************************************/
   // Free the dynamically allocated memory
@@ -166,10 +132,6 @@ int main(long argc, char *argv[]) {
   free(psiElecs); free(psiHoles);
   free(elecQP); free(holeQP);
   free(nonintTwoQP);
- 
-  // Free memory related to strain 
-  free(atomNearestNeighbors); 
-  free(strainScale); free(strainScaleDerivatives);
 
   /**************************************************************************/
   // Write program timings 

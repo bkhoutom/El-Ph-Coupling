@@ -58,47 +58,12 @@ void calcPseudopotentialDerivative(grid1d *dAtomicPPGrid, gridPoint1d *dAtomicPP
 }
 
 /******************************************************************************/
-/* calculate atomic potential for all real-space grid points */
-/******************************************************************************/
-void calcPotential(vector *pot, grid3d rSpaceGrid, vector atomPosition, 
-        double *potentialValues, double *potentialGridPointValues,
-        double potGridStepSize, long nPotValues, vector strainScaleDeriv) {
-
-    long iGrid;
-    double potVal;
-    double distR;
-    vector delR;
-
-    for (iGrid = 0; iGrid < rSpaceGrid.nGridPoints; iGrid++) {
-        // grid point mimus atom (r-R)
-        delR = retSubtractedVectors(rSpaceGrid.gP[iGrid].pos, atomPosition);
-        // distance between grid point and atom (|r-R|)
-        distR = delR.mag;
-
-        // real-space cut-off -- if grid space is far from atom
-        // potential is 0 at that grid point
-        if (distR > 26.) {
-            pot[iGrid] = retAddedVectors(pot[iGrid], retZeroVector());
-        }
-        else {
-            // interpolate to find pseudopotential at distR (PP(|r-R|))
-            potVal = interpolate(distR, potGridStepSize, potentialValues,
-                               potentialGridPointValues, nPotValues);
-            // multiply by derivative of strain scale
-            pot[iGrid] = retAddedVectors(pot[iGrid], retScaledVector(strainScaleDeriv, potVal));
-        }
-    }
-
-    return;
-}
-
-/******************************************************************************/
 /* calculate derivative of potential wrt atomic coordinate (dPot/dR) 
  * calculates for all real-space grid points for a given atom */
 /******************************************************************************/
 void calcdPotentialdR(vector *dPotdR, grid3d rSpaceGrid, vector atomPosition,
                       double *potentialValues, double *potentialGridPointValues,
-                      double potGridStepSize, long nPotValues, double strainScale) {
+                      double potGridStepSize, long nPotValues) {
 
     long iGrid;
     double dPot;
@@ -114,15 +79,14 @@ void calcdPotentialdR(vector *dPotdR, grid3d rSpaceGrid, vector atomPosition,
         // real-space cut-off -- if grid space is far from atom
         // potential is 0 at that grid point
         if (distR > 26.) {
-            dPotdR[iGrid] = retAddedVectors(dPotdR[iGrid], retZeroVector());
+            dPotdR[iGrid] = retScaledVector(delR, 0.);
         }
         else {
             // interpolate to find derivative of pseudopotential at distR (dPP/d(|r-R|))
             dPot = interpolate(distR, potGridStepSize, potentialValues,
                                potentialGridPointValues, nPotValues);
             // multiply by d(|r-R|)/dR to get (dPot/dR) 
-            // also multiply by strain scale 
-            dPotdR[iGrid] = retAddedVectors(dPotdR[iGrid], retScaledVector(delR, -strainScale * dPot / (distR + EPS)));
+            dPotdR[iGrid] = retScaledVector(delR, -dPot / (distR + EPS));
         }
     }
 

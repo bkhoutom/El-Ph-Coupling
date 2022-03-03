@@ -7,7 +7,7 @@ Reorganization Energy for QD dimer
 # # IMPORT MODULES
 # =============================================================================
 import numpy as np
-# import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import argparse
 
 # =============================================================================
@@ -50,13 +50,14 @@ def buildParser():
 # =============================================================================
 # # IMPORT FILES
 # =============================================================================
-file2 = "states_index.par"
+file1 = "ener_loc.dat"
+file2 = "states_index.dat"
 file3 = np.loadtxt("w.dat",delimiter=" ") # nu in Hz
 file4 = np.loadtxt("Vkkq-diabatic-diag.dat",delimiter=" ")
-lines = np.array([line.strip().split() for line in open(file2, 'r')],dtype=object)[1:]
-LR = np.array([str(line[0]) for line in lines])
-index = np.array([int(line[1]) for line in lines]) # index of the states based on increase of ener
-ener = np.array([float(line[3]) for line in lines]) # local states energies
+lines = np.array([line.strip().split() for line in open(file1, 'r')])
+index = np.array(lines)[:,0].astype(int) # index of the states based on increase of ener
+ener = np.array(lines)[:,1].astype(float) # local states energies
+LR = np.array([line.strip().split()[0] for line in open(file2, 'r')])[1:]
 w = 2*np.pi*file3[:,1]*np.sqrt(1/evtoj)*10**(12) # w in the unit of sqrt(ev)/meter
 
 # initialize index and energy(in eV) for n \in L and m \in R:
@@ -92,11 +93,13 @@ for alpha in range(3*params.nAtom):
             
     lambda_alpha_arr[alpha] = 1/(Z_L * Z_R) * lambda_alpha
     
+            
+
 np.savetxt("lambda.dat",lambda_alpha_arr)
 
-# nu = file3[:,1]
-# plt.plot(nu[6:],lambda_alpha_arr[6:],'o',markersize=3)
-# plt.ylabel(r"$\lambda_{\alpha}$ (eV)")
-# plt.xlabel("Frequency (THz)")
-# plt.yscale("log")
-# plt.savefig("lambda_alpha.pdf")
+nu = file3[:,1]
+plt.plot(nu[6:],lambda_alpha_arr[6:],'o',markersize=3)
+plt.ylabel(r"$\lambda_{\alpha}$ (eV)")
+plt.xlabel("Frequency (THz)")
+plt.yscale("log")
+plt.savefig("lambda_alpha.pdf")

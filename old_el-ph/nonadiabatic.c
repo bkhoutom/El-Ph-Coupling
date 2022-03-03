@@ -6,7 +6,6 @@
  * between quasiparticle states
  * int(psi_r * dPot/dR * psi_s) / (E_s - E_r) for all atoms */
 /******************************************************************************/
-/*
 void calcDerivativeCouplings(vector *Vab, vector *Vij, vector *dPotdR, atom *atoms, 
         grid1d dAtomicPPGrid, nonintQP *holeQP, nonintQP *elecQP, 
         grid3d rSpaceGrid, lParams lPar) {
@@ -134,7 +133,6 @@ void calcDerivativeCouplings(vector *Vab, vector *Vij, vector *dPotdR, atom *ato
 
     return;
 }
-*/
 
 /******************************************************************************/
 /* calculate electron-phonon matrix elements (i.e. el-ph coupling for diabatic 
@@ -142,13 +140,12 @@ void calcDerivativeCouplings(vector *Vab, vector *Vij, vector *dPotdR, atom *ato
  * int(psi_r * dPot/dR * psi_s) for all atoms 
  * computes diagonal matrix elements (for reorganization energy / HR parameter) */
 /******************************************************************************/
-void calcElPh(vector *Vab, vector *Vij, vector *dPotdR, atom *atoms, atom *atomNeighbors,
-        grid1d atomicPPGrid, grid1d dAtomicPPGrid, nonintQP *holeQP, nonintQP *elecQP, 
-        grid3d rSpaceGrid, double *strainScale, vector *strainScaleDeriv, lParams lPar) {
+void calcElPh(vector *Vab, vector *Vij, vector *dPotdR, atom *atoms, 
+        grid1d dAtomicPPGrid, nonintQP *holeQP, nonintQP *elecQP, 
+        grid3d rSpaceGrid, lParams lPar) {
 
     FILE *pf;
-    long i, j, iR, iS, iGrid, iAtom, iNeighbor, neighborIndex, atomType, nTotalPPValues;
-    double *potValues, *potGridPointValues;
+    long i, iR, iS, iGrid, iAtom, atomType, nTotalPPValues;
     double *dPotValues, *dPotGridPointValues;
     double rho;
     double *psiR, *psiS;
@@ -156,17 +153,10 @@ void calcElPh(vector *Vab, vector *Vij, vector *dPotdR, atom *atoms, atom *atomN
 
     // dynamically allocate memory
     nTotalPPValues = dAtomicPPGrid.nGridPoints*lPar.nSCAtomTypes;
-    if ((potValues = (double *) calloc(nTotalPPValues, sizeof(double))) == NULL) memoryError("potValues");
-    if ((potGridPointValues = (double *) calloc(nTotalPPValues, sizeof(double))) == NULL) memoryError("potGridPointValues");
     if ((dPotValues = (double *) calloc(nTotalPPValues, sizeof(double))) == NULL) memoryError("dPotValues");
     if ((dPotGridPointValues = (double *) calloc(nTotalPPValues, sizeof(double))) == NULL) memoryError("dPotGridPointValues");
 
     // get potential grid points and values
-    for (iGrid = 0; iGrid < nTotalPPValues; iGrid++) {
-        potGridPointValues[iGrid] = atomicPPGrid.gP[iGrid].pos;
-        potValues[iGrid] = atomicPPGrid.gP[iGrid].localVal;
-    }
-    // get potential derivative grid points and values
     for (iGrid = 0; iGrid < nTotalPPValues; iGrid++) {
         dPotGridPointValues[iGrid] = dAtomicPPGrid.gP[iGrid].pos;
         dPotValues[iGrid] = dAtomicPPGrid.gP[iGrid].localVal;
@@ -183,22 +173,8 @@ void calcElPh(vector *Vab, vector *Vij, vector *dPotdR, atom *atoms, atom *atomN
             atomType = atoms[iAtom].type;
             i = atomType*dAtomicPPGrid.nGridPoints;
 
-            // zero dPotdR
-            for (iGrid = 0; iGrid < rSpaceGrid.nGridPoints; iGrid++) {
-                dPotdR[iGrid] = retZeroVector();
-            }
-            // derivative of iAtom's pseudopotential wrt iAtom's position (on grid)
             calcdPotentialdR(dPotdR, rSpaceGrid, atoms[iAtom].pos, &(dPotValues[i]), &(dPotGridPointValues[i]),
-                             dAtomicPPGrid.stepSize, dAtomicPPGrid.nGridPoints, strainScale[iAtom]);
-            // // iAtom's neighbor's pseudopotentials (on grid)
-            for (iNeighbor = 0; iNeighbor < 4; iNeighbor++) {
-                neighborIndex = atomNeighbors[4*iAtom+iNeighbor].index;
-                if (! isAPassivationSymbol(atoms[neighborIndex].symbol)) {
-                    j = atoms[neighborIndex].type*atomicPPGrid.nGridPoints;
-                    calcPotential(dPotdR, rSpaceGrid, atoms[neighborIndex].pos, &(potValues[j]), &(potGridPointValues[j]),
-                            atomicPPGrid.stepSize, atomicPPGrid.nGridPoints, strainScaleDeriv[4*iAtom+iNeighbor]);
-                }
-            }
+                             dAtomicPPGrid.stepSize, dAtomicPPGrid.nGridPoints);
 
             // printf("Computing hole matrix elements\n");
 
@@ -319,7 +295,6 @@ void calcElPh(vector *Vab, vector *Vij, vector *dPotdR, atom *atoms, atom *atomN
     }
 
     // free dynamically allocated memory
-    free(potValues); free(potGridPointValues);
     free(dPotValues); free(dPotGridPointValues);
 
     return;

@@ -65,30 +65,6 @@ vector retZeroVector() {
 }
 
 /****************************************************************************/
-vector retIVector() {
-    vector iVect;
-    iVect.x = 1.0; iVect.y = 0.0; iVect.z = 0.0; iVect.mag = 1.0;
-
-    return iVect;
-}
-
-/****************************************************************************/
-vector retJVector() {
-    vector jVect;
-    jVect.x = 0.0; jVect.y = 1.0; jVect.z = 0.0; jVect.mag = 1.0;
-
-    return jVect;
-}
-
-/****************************************************************************/
-vector retKVector() {
-    vector kVect;
-    kVect.x = 0.0; kVect.y = 0.0; kVect.z = 1.0; kVect.mag = 1.0;
-
-    return kVect;
-}
-
-/****************************************************************************/
 double retDotProduct(vector vect1, vector vect2) {
   return (vect1.x * vect2.x + vect1.y * vect2.y + vect1.z * vect2.z);
 }
