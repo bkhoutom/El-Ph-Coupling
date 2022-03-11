@@ -243,6 +243,7 @@ def read_DiabCoupling(natoms, nQPs, Vrs_file):
 def compute_eleCouplingAtomic(natoms, nElec, nHole):
 
     idx = 0
+    nQPs = nElec + nHole
     # Read in quasiparticle diabatic couplings
     if nElec != 0:
         Vkl = np.zeros((3*natoms, nElec, nElec))
@@ -256,10 +257,10 @@ def compute_eleCouplingAtomic(natoms, nElec, nHole):
     
     # electron or hole contribution
 
-    for n in range(nElec):
+    for n in range(nQPs):
         Vnn = np.zeros(np.shape(Vab[:,0,0]))
-        for a in range(nElec):
-            for b in range(nElec):
+        for a in range(nQPs):
+            for b in range(nQPs):
                  Vnn += Utlt[n,a]*Utlt[n,b]*Vab[:,a,b]
         Vkl[:,n,n] = Vnn
 
