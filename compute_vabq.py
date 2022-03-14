@@ -107,15 +107,7 @@ def read_umat(nElec, nHole):
     if nElec * nHole != 0:
         print("Must input either electrons or holes, can't do mixed...")
         exit()
-    umat_tlt = np.loadtxt(filename,delimiter=' ')
-    if nElec != 0:
-        nQPs = nElec
-    elif nHole != 0:
-        nQPs = nHole
-    else:
-        print("Error in the number of nElec or nHole")
-        exit()
-    Utlt = umat_tlt[:,-1].reshape((nQPs,nQPs))
+    Utlt = np.loadtxt(filename,delimiter=' ')
     return Utlt
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
