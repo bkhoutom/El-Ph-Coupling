@@ -97,7 +97,7 @@ def construct_ham_n_U(nElec,nHole):
     np.savetxt("umat_tlt.dat",Utlt)
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
-# read in  matrix element U_na from umat.dat from localization
+# read in  matrix element U_na from umat_tlt.dat from localization
 
 def read_umat(nElec, nHole):
     filename = 'umat_tlt.dat' ##############to umat_tilt.par
@@ -107,7 +107,7 @@ def read_umat(nElec, nHole):
     if nElec * nHole != 0:
         print("Must input either electrons or holes, can't do mixed...")
         exit()
-    umat = np.loadtxt("umat.par",delimiter=' ')
+    umat_tlt = np.loadtxt(filename,delimiter=' ')
     if nElec != 0:
         nQPs = nElec
     elif nHole != 0:
@@ -115,7 +115,7 @@ def read_umat(nElec, nHole):
     else:
         print("Error in the number of nElec or nHole")
         exit()
-    Utlt = umat[:,-1].reshape((nQPs,nQPs))
+    Utlt = umat_tlt[:,-1].reshape((nQPs,nQPs))
     return Utlt
 
 # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # # #
@@ -261,7 +261,7 @@ def compute_eleCouplingAtomic(natoms, nElec, nHole):
         Vnn = np.zeros(np.shape(Vab[:,0,0]))
         for a in range(nQPs):
             for b in range(nQPs):
-                 Vnn += Utlt[n,a]*Utlt[n,b]*Vab[:,a,b]
+                 Vnn += Utlt[a,n]*Utlt[b,n]*Vab[:,a,b]
         Vkl[:,n,n] = Vnn
 
     Vkl *= autoj/autom # J / m
